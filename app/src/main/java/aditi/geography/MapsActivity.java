@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -48,8 +50,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker locationMarker = null;
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //Log.d(TAG, "Invoking onCreate");
@@ -71,6 +71,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         });
+
+        TextView questionText = (TextView) findViewById(R.id.textView2);
+        questionText.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -191,7 +194,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapClick(LatLng arg0) {
 
-                if(locationMarker != null){
+                if (locationMarker != null) {
                     locationMarker.remove();
                 }
 
@@ -206,8 +209,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         selectedCountry = add.get(0).getCountryName();
                         selectedStateOrCountry = selectedCountry;
                         selectedCountryCode = add.get(0).getCountryCode().toLowerCase();
-                        Log.d("country", selectedCountry);
-                        Log.d("country code", add.get(0).getCountryCode());
+//                        Log.d("country maps", selectedCountry);
+//                        Log.d("country code maps", add.get(0).getCountryCode());
                         //For usa go with states . All other countries - it gives the capital
                         if (selectedCountry.equalsIgnoreCase("United States") ||
                                 selectedCountry.equalsIgnoreCase("US")) {
@@ -215,16 +218,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
 
                         locationMarker = mMap.addMarker(new MarkerOptions().
-                                        position(latlongMarker).title(selectedCountry));
+                                position(latlongMarker).title(selectedCountry));
 
                         String uri = "@drawable/" + selectedCountry.toLowerCase();
 
-                        if( selectedCountry.contains(" ")){
+
+                        //for displaying map icon
+                        if (selectedCountry.contains(" ")) {
                             uri = "@drawable/" + selectedCountryCode;
                         }
-                        int imageRes = getResources().getIdentifier(uri , null , getPackageName());
+                        int imageRes = getResources().getIdentifier(uri, null, getPackageName());
 
-                        if( imageRes != 0 ) {
+                        if (imageRes != 0) {
                             int height = 200;
                             int width = 300;
                             BitmapDrawable bitmapdraw = (BitmapDrawable) getResources().getDrawable(imageRes);

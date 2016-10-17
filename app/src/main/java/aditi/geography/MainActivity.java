@@ -18,6 +18,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Button exitGameButton = (Button) this.findViewById(R.id.exit_button);
         exitGameButton.setOnClickListener(this);
+
+        Button playgameButton = (Button) this.findViewById(R.id.playgame);
+        playgameButton.setOnClickListener(this);
     }
 
     @Override
@@ -32,6 +35,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.exit_button:
                 finish();
+                break;
+
+            case R.id.playgame:
+                Intent gameintent = new Intent(MainActivity.this , GameActivity.class);
+                startActivity(gameintent);
                 break;
 
         }
