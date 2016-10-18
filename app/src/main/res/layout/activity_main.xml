@@ -3,44 +3,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/mainBackGround"
     tools:context="aditi.geography.MainActivity">
+
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textMultiLine"
-        android:text="Want to know more about our world ? \nTouch anywhere on the map to know some facts about the country\n\nIf its within the USA, you will hear some trivia about the state you are on\n\nThis app requires sound to be ON."
-        android:textStyle="italic"
-        android:textSize="9pt" />
+        android:text="Do you know our world ?"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textSize="12pt" />
 
     <Button
         android:id="@+id/newGame_button"
         android:layout_width="wrap_content"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView"
+        android:text="Explore"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:elevation="12dp"
+        android:layout_above="@+id/playgame"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="74dp"
-        android:text="Start" />
-
+        android:layout_marginBottom="90dp"
+        android:background="@color/buttonBackGround"/>
 
     <Button
         android:id="@+id/exit_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/newGame_button"
+        android:text="Exit"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:elevation="11dp"
+        android:layout_weight="1"
+        android:layout_below="@+id/playgame"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="74dp"
-        android:text="Exit" />
+        android:layout_marginTop="86dp"
+        android:background="@color/buttonBackGround"/>
 
     <Button
-        android:text="PlayGame"
+        android:text="Quiz"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/exit_button"
+        android:layout_weight="1"
+
+        android:id="@+id/playgame"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:elevation="12dp"
+        android:layout_centerVertical="true"
         android:layout_alignRight="@+id/exit_button"
         android:layout_alignEnd="@+id/exit_button"
-        android:layout_marginTop="39dp"
-        android:id="@+id/playgame" />
+        android:background="@color/buttonBackGround"/>
+
 
 </RelativeLayout>

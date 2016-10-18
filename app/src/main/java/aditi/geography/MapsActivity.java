@@ -1,6 +1,8 @@
 package aditi.geography;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -40,6 +42,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Map<String, String> countryCapitalMap = new HashMap<>();
     Map<String, String> currencyMap = new HashMap<>();
     private String selectedStateOrCountry;
+    String selectedCountry;
+    String selectedCountryCode;
     Properties properties = new Properties();
 
 
@@ -52,25 +56,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //Log.d(TAG, "Invoking onCreate");
-        //Log.d(TAG, "size of countryCapitalMap" + countryCapitalMap.size());
-        super.onCreate(savedInstanceState);
+              super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        initMap();
+        init();
 
-        tts = new TextToSpeech(MapsActivity.this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.ERROR) {
-                    //Log.e(TAG, "Failed to initialize text to speech");
-                }
-            }
-        });
 
         TextView questionText = (TextView) findViewById(R.id.textView2);
         questionText.setVisibility(View.INVISIBLE);
@@ -78,19 +72,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onPause() {
-        //Log.d(TAG, "Invoking onPause");
         if (tts != null) {
             tts.stop();
             tts.shutdown();
         }
-
-
         super.onPause();
     }
 
     @Override
     protected void onStop() {
-        //Log.d(TAG, "Invoking onStop");
         if (tts != null) {
             tts.stop();
             tts.shutdown();
@@ -98,13 +88,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (SSLUtils.conn != null) {
             SSLUtils.conn.disconnect();
         }
-
         super.onStop();
     }
 
-    private void initMap() {
-
-
+    private void init() {
         InputStream stream = getClass().getClassLoader().getResourceAsStream(propFileUSA);
         try {
             if (stream != null) {
@@ -128,25 +115,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (Exception e) {
 
         }
-
-
         new LongRunningGetIO().execute();
-
     }
 
     /**
-     * Make rest call to api to get countries/capitals and populate map
+     * Make rest call to api to get countries/capitals and populate map , initialize tts
      */
     private void background() {
+        tts = new TextToSpeech(MapsActivity.this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.ERROR) {
+                    //Log.e(TAG, "Failed to initialize text to speech");
+                }
+            }
+        });
+
         InputStream inputStream = null;
         try {
             inputStream = SSLUtils.invokeHttpsApi(urlString);
-            //Log.d(TAG, "result is " + inputStream.toString());
-
         } catch (Exception e) {
             //Log.e(TAG, "Unable to talk to rest countries api", e);
         }
-
         try {
             SSLUtils.parseJsonCountriesOutput(inputStream, countryCapitalMap, currencyMap);
         } catch (Exception e) {
@@ -203,14 +193,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 try {
                     Geocoder geo = new Geocoder(MapsActivity.this, Locale.getDefault());
                     List<Address> add = geo.getFromLocation(arg0.latitude, arg0.longitude, 1);
-                    String selectedCountry;
-                    String selectedCountryCode;
+
                     if (add.size() > 0) {
                         selectedCountry = add.get(0).getCountryName();
                         selectedStateOrCountry = selectedCountry;
                         selectedCountryCode = add.get(0).getCountryCode().toLowerCase();
-//                        Log.d("country maps", selectedCountry);
-//                        Log.d("country code maps", add.get(0).getCountryCode());
                         //For usa go with states . All other countries - it gives the capital
                         if (selectedCountry.equalsIgnoreCase("United States") ||
                                 selectedCountry.equalsIgnoreCase("US")) {
@@ -220,28 +207,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         locationMarker = mMap.addMarker(new MarkerOptions().
                                 position(latlongMarker).title(selectedCountry));
 
-                        String uri = "@drawable/" + selectedCountry.toLowerCase();
+                        //resize image in Async task
+                        new processBitMap().execute();
 
-
-                        //for displaying map icon
-                        if (selectedCountry.contains(" ")) {
-                            uri = "@drawable/" + selectedCountryCode;
-                        }
-                        int imageRes = getResources().getIdentifier(uri, null, getPackageName());
-
-                        if (imageRes != 0) {
-                            int height = 200;
-                            int width = 300;
-                            BitmapDrawable bitmapdraw = (BitmapDrawable) getResources().getDrawable(imageRes);
-                            Bitmap b = bitmapdraw.getBitmap();
-                            Bitmap smallMarker = Bitmap.createScaledBitmap(b, width, height, false);
-
-                            BitmapDescriptor tmp = BitmapDescriptorFactory.fromBitmap(smallMarker);
-                            locationMarker.setIcon(tmp);
-                        }
-
-
-                        //Log.d("state", selectedStateOrCountry);
                         locationMarker.showInfoWindow();
                         ConvertTextToSpeech();
                     }
@@ -255,7 +223,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add a marker in California and move the camera
         LatLng californiaMarker = new LatLng(37, -122);
         locationMarker = mMap.addMarker(new MarkerOptions().position(californiaMarker).title("Click anywhere to get more info"));
+        locationMarker.showInfoWindow();
         mMap.moveCamera(CameraUpdateFactory.newLatLng(californiaMarker));
+    }
+
+    public void setLocationMarker(BitmapDescriptor icon) {
+        locationMarker.setIcon(icon);
+        locationMarker.showInfoWindow();
+    }
+
+
+    /**
+     * AsyncTask for setting bitmap icon flag on the marker window
+     */
+    private class processBitMap extends AsyncTask<Void, Void, BitmapDescriptor> {
+        protected BitmapDescriptor doInBackground(Void... params) {
+            BitmapDescriptor resized = null;
+            Bitmap bitmap = null;
+            String uri = "@drawable/" + selectedCountry.toLowerCase();
+
+            //for displaying map icon
+            if (selectedCountry.contains(" ")) {
+                uri = "@drawable/" + selectedCountryCode;
+            }
+            int imageRes = getResources().getIdentifier(uri, null, getPackageName());
+
+            if (imageRes != 0) {
+
+                bitmap = Utils.decodeSampledBitmapFromResource(getResources(), imageRes, 250, 150);
+                resized = BitmapDescriptorFactory.fromBitmap(bitmap);
+            }
+            return resized;
+        }
+
+        protected void onPostExecute(BitmapDescriptor resized) {
+            if (resized != null) {
+                setLocationMarker(resized);
+            }
+        }
+
     }
 
     /*
