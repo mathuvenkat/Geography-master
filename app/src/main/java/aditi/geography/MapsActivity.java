@@ -1,16 +1,12 @@
 package aditi.geography;
 
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -37,26 +33,26 @@ import java.util.Properties;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private GoogleMap mMap;
-    TextToSpeech tts;
-    Map<String, String> countryCapitalMap = new HashMap<>();
-    Map<String, String> currencyMap = new HashMap<>();
-    private String selectedStateOrCountry;
-    String selectedCountry;
-    String selectedCountryCode;
-    Properties properties = new Properties();
-
-
     private static String TAG = "MapsActivity";
+
+    private GoogleMap mMap;
+    private TextToSpeech tts;
+    Marker locationMarker = null;
+
+    Properties properties = new Properties();
     private String urlString = "https://restcountries.eu/rest/v1/all";
     String propFileUSA = "states.properties";
     String currencyCodes = "currencycodes.csv";
-    Marker locationMarker = null;
 
+    Map<String, String> countryCapitalMap = new HashMap<>();
+    Map<String, String> currencyMap = new HashMap<>();
+    private String selectedStateOrCountry;
+    private String selectedCountry;
+    private String selectedCountryCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-              super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -65,7 +61,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         init();
 
-
+        //Same activity is used for the game and explore pages.
         TextView questionText = (TextView) findViewById(R.id.textView2);
         questionText.setVisibility(View.INVISIBLE);
     }
@@ -104,9 +100,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String line;
         String arr[];
         stream = getClass().getClassLoader().getResourceAsStream(currencyCodes);
+        BufferedReader br = null;
         try {
             if (stream != null) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+                br = new BufferedReader(new InputStreamReader(stream));
                 while ((line = br.readLine()) != null) {
                     arr = line.split(",");
                     currencyMap.put(arr[0], arr[1]);
@@ -114,6 +111,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         } catch (Exception e) {
 
+        } finally {
+            try {
+                br.close();
+                stream.close();
+            } catch (Exception e) {
+
+            }
         }
         new LongRunningGetIO().execute();
     }
@@ -249,7 +253,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             int imageRes = getResources().getIdentifier(uri, null, getPackageName());
 
             if (imageRes != 0) {
-
                 bitmap = Utils.decodeSampledBitmapFromResource(getResources(), imageRes, 250, 150);
                 resized = BitmapDescriptorFactory.fromBitmap(bitmap);
             }

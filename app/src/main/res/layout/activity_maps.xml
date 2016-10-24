@@ -14,9 +14,21 @@
     tools:context="aditi.geography.MapsActivity" />
 
     <TextView
-        android:text="TextView"
+        android:text="Initializing....."
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/textView2" />
+        android:id="@+id/textView2"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_gravity="top|left"/>
+
+    <TextView
+        android:text="Score is 0"
+        android:layout_width="89dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/score"
+        android:layout_marginTop="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_gravity="top|right"/>
 
 </FrameLayout>

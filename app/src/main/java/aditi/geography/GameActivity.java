@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
@@ -23,39 +22,38 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Set;
 
 
 public class GameActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private GoogleMap mMap;
-    TextToSpeech tts;
-    Properties properties = new Properties();
-    Marker locationMarker = null;
+    private static String TAG = "GameActivity";
 
-    int score;
+    private GoogleMap mMap;
+    private TextToSpeech tts;
+    private Marker locationMarker = null;
+    private static Set<String> countryNamesForQuiz;
+    Iterator<String> setIter;
+    private static Map<String, LatLong> countryCodetoDetails = new HashMap<>();
+    private static Map<String, String> countryNamesToCodes = new HashMap<>();
 
 
     String selectedCountryCode;
     String selectedCountry;
-    String propFile = "questions.properties";
     String latLongCountryCode = "latlongcountry.csv";
+    int score;
+    int numQuestions;
+    private static int numClicksPerQuestion;
 
-    public static List<String> list = new ArrayList<String>();
-    public static int listIndex = 0;
 
-    private static String TAG = "GameActivity";
-
-    private static int numClicksPerQuestion = 0;
-    private static Map<String, LatLong> map = new HashMap<>();
-
+    TextView questionText;
+    TextView scoreText;
+    private static String questionString = "Locate ";
 
     private class LatLong {
         Double lat;
@@ -75,20 +73,35 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        numClicksPerQuestion = 0;
+        questionText = (TextView) findViewById(R.id.textView2);
+        questionText.setVisibility(View.VISIBLE);
+        questionText.getLayoutParams().height = 200;
+        questionText.setTextColor(Color.BLACK);
+        questionText.setTextSize(questionText.getTextSize() + 15);
+
+        scoreText = (TextView) findViewById(R.id.score);
+        scoreText.setVisibility(View.VISIBLE);
+        scoreText.getLayoutParams().height = 75;
+        scoreText.setTextColor(Color.BLACK);
+        scoreText.setTextSize(scoreText.getTextSize() + 5);
+
         init();
     }
 
-    private void init() {
-        new LongRunningGetIO().execute();
+    private void setQuestionText(String question) {
+        questionText.setText(questionString + question);
+        scoreText.setText(score + "/" + numQuestions);
+        numQuestions++;
     }
 
-    private void initBackgroundTask() {
-        //init tts
+    private void init() {
+
+        InputStream stream;
         tts = new TextToSpeech(GameActivity.this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
@@ -98,61 +111,40 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        InputStream stream;
-        stream = getClass().getClassLoader().getResourceAsStream(propFile);
-        try {
-            if (stream != null) {
-                properties.load(stream);
-                for (Object obj : properties.keySet()) {
-                    list.add("Locate " + (String) obj + " on the map");
-                }
-            }
-        } catch (Exception e) {
-            //Log.e(TAG, "Could not load prop file");
-        }
-        TextView questionText = (TextView) findViewById(R.id.textView2);
-        questionText.setVisibility(View.VISIBLE);
-        questionText.getLayoutParams().height = 200;
-        questionText.setTextColor(Color.BLACK);
-        questionText.setTextSize(questionText.getTextSize() + 15);
-        numClicksPerQuestion = 0;
-
-        questionText.setText(list.get(listIndex));
-        tts.speak(list.get(listIndex), TextToSpeech.QUEUE_FLUSH, null);
-
 
         String line;
         String arr[];
         stream = getClass().getClassLoader().getResourceAsStream(latLongCountryCode);
+        BufferedReader br = null;
         try {
             if (stream != null) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+                 br = new BufferedReader(new InputStreamReader(stream));
                 while ((line = br.readLine()) != null) {
                     arr = line.split(",");
-                    map.put(arr[0], new LatLong(Double.parseDouble(arr[1]),
+                    countryCodetoDetails.put(arr[0], new LatLong(Double.parseDouble(arr[1]),
                             Double.parseDouble(arr[2]),
                             arr[3]));
+                    countryNamesToCodes.put(arr[3], arr[0]);
                 }
-            }
 
+                countryNamesForQuiz = countryNamesToCodes.keySet();
+                setIter = countryNamesForQuiz.iterator();
+
+                String next = setIter.next();
+                tts.speak(next, TextToSpeech.QUEUE_FLUSH, null);
+                setQuestionText(next);
+            }
         } catch (Exception e) {
-        }
-    }
-
-    /*
-    Async Task of connecting to rest api.
-     */
-    private class LongRunningGetIO extends AsyncTask<Void, Void, String> {
-        protected String doInBackground(Void... params) {
+        } finally {
             try {
-
-                initBackgroundTask();
+                br.close();
+                stream.close();
             } catch (Exception e) {
-                //Log.e(TAG, "invoking capitals rest api failed", e);
+
             }
-            return null;
         }
     }
+
 
     @Override
     protected void onPause() {
@@ -199,46 +191,42 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     private void ConvertTextToSpeech() {
         TextView questionText = (TextView) findViewById(R.id.textView2);
         String question = (String) questionText.getText();
-        String comparisonString[] = question.split(" ");
-        String mappedCountryCode = (String) properties.get(comparisonString[1]);
+        String tmp[] = question.split(questionString);
+        String expectedCountryCode = countryNamesToCodes.get(tmp[1]);
 
-        if (selectedCountryCode.equals(mappedCountryCode)) {
+        Log.d("Expected code", expectedCountryCode);
+        Log.d("Expected name", tmp[1]);
+        Log.d("selected code", selectedCountryCode);
+
+
+        if (selectedCountryCode.equals(expectedCountryCode)) {
             playMusic(this, R.raw.correct);
-
-
-            if (listIndex + 1 < list.size()) {
-                listIndex++;
-            } else {
-                listIndex = 0;
+            if (!setIter.hasNext()) {
+                setIter = countryNamesForQuiz.iterator();
             }
             score++;
             if (score % 5 == 0) {
-
                 playMusic(this, R.raw.cheering);
             }
-            questionText.setText(list.get(listIndex));
+            setQuestionText(setIter.next());
             numClicksPerQuestion = 0;
         } else {
             playMusic(this, R.raw.wrong);
             if (numClicksPerQuestion >= 5) {
                 //show the answer and go to next question
                 tts.speak("Sorry no more guesses for this question", TextToSpeech.QUEUE_FLUSH, null);
-                LatLng latlongMarker = new LatLng(map.get(mappedCountryCode).lat,
-                        map.get(mappedCountryCode).lon);
+                LatLng latlongMarker = new LatLng(countryCodetoDetails.get(expectedCountryCode).lat,
+                        countryCodetoDetails.get(expectedCountryCode).lon);
                 locationMarker.remove();
                 locationMarker = mMap.addMarker(new MarkerOptions().
-                        position(latlongMarker).title("This is " + map.get(mappedCountryCode).name));
+                        position(latlongMarker).title("This is " + countryCodetoDetails.get(expectedCountryCode).name));
                 locationMarker.showInfoWindow();
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latlongMarker));
-
-                if (listIndex + 1 < list.size()) {
-                    listIndex++;
-                } else {
-                    listIndex = 0;
+                if (!setIter.hasNext()) {
+                    setIter = countryNamesForQuiz.iterator();
                 }
-                questionText.setText(list.get(listIndex));
+                setQuestionText(setIter.next());
                 numClicksPerQuestion = 0;
-
             } else {
                 numClicksPerQuestion++;
             }
@@ -261,7 +249,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng arg0) {
-
                 if (locationMarker != null) {
                     locationMarker.remove();
                 }
@@ -269,8 +256,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 try {
                     Geocoder geo = new Geocoder(GameActivity.this, Locale.getDefault());
                     List<Address> add = geo.getFromLocation(arg0.latitude, arg0.longitude, 1);
-
-
                     if (add.size() > 0) {
                         selectedCountry = add.get(0).getCountryName();
                         selectedCountryCode = add.get(0).getCountryCode();
