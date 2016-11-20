@@ -64,6 +64,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //Same activity is used for the game and explore pages.
         TextView questionText = (TextView) findViewById(R.id.textView2);
         questionText.setVisibility(View.INVISIBLE);
+
+        TextView scoreText = (TextView) findViewById(R.id.score);
+        scoreText.setVisibility(View.INVISIBLE);
     }
 
     @Override
