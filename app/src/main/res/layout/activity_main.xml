@@ -25,10 +25,24 @@
         android:text="Explore"
         style="@style/Widget.AppCompat.Button.Colored"
         android:elevation="12dp"
-        android:layout_above="@+id/playgame"
+        android:background="@color/buttonBackGround"
+        android:layout_below="@+id/textView"
+        android:layout_alignLeft="@+id/exit_button"
+        android:layout_alignStart="@+id/exit_button"
+        android:layout_marginTop="64dp" />
+
+    <Button
+        android:text="Location Quiz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:id="@+id/playgame"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:elevation="12dp"
+        android:background="@color/buttonBackGround"
+        android:layout_below="@+id/newGame_button"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="90dp"
-        android:background="@color/buttonBackGround"/>
+        android:layout_marginTop="33dp" />
 
     <Button
         android:id="@+id/exit_button"
@@ -38,24 +52,23 @@
         style="@style/Widget.AppCompat.Button.Colored"
         android:elevation="11dp"
         android:layout_weight="1"
-        android:layout_below="@+id/playgame"
+        android:background="@color/buttonBackGround"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="86dp"
-        android:background="@color/buttonBackGround"/>
+        android:layout_marginBottom="117dp" />
 
     <Button
-        android:text="Quiz"
+        android:text="Landmarks Quiz"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-
-        android:id="@+id/playgame"
         style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_weight="1"
         android:elevation="12dp"
-        android:layout_centerVertical="true"
-        android:layout_alignRight="@+id/exit_button"
-        android:layout_alignEnd="@+id/exit_button"
-        android:background="@color/buttonBackGround"/>
+        android:background="@color/buttonBackGround"
+        android:id="@+id/monuments"
+        android:layout_below="@+id/playgame"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="65dp" />
 
 
 </RelativeLayout>

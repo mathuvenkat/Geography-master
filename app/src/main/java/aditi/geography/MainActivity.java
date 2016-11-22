@@ -21,6 +21,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Button playgameButton = (Button) this.findViewById(R.id.playgame);
         playgameButton.setOnClickListener(this);
+
+
+        Button monumentButton = (Button) this.findViewById(R.id.monuments);
+        monumentButton.setOnClickListener(this);
     }
 
     @Override
@@ -40,6 +44,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.playgame:
                 Intent gameintent = new Intent(MainActivity.this , GameActivity.class);
                 startActivity(gameintent);
+                break;
+
+
+            case R.id.monuments:
+                Intent gameMonumentintent = new Intent(MainActivity.this , MonumentQuizActivity.class);
+                startActivity(gameMonumentintent);
                 break;
 
         }
