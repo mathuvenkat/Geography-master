@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/mainBackGround"
+    android:background="@color/black"
     tools:context="aditi.geography.MainActivity">
 
 
@@ -14,61 +14,62 @@
         android:text="Do you know our world ?"
         android:textStyle="bold"
         android:gravity="center"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:textSize="12pt" />
 
     <Button
         android:id="@+id/newGame_button"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_weight="1"
         android:layout_height="wrap_content"
         android:text="Explore"
-        style="@style/Widget.AppCompat.Button.Colored"
         android:elevation="12dp"
-        android:background="@color/buttonBackGround"
         android:layout_below="@+id/textView"
-        android:layout_alignLeft="@+id/exit_button"
-        android:layout_alignStart="@+id/exit_button"
-        android:layout_marginTop="64dp" />
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/red_button"
+        style="@style/button_text"
+        />
 
     <Button
         android:text="Location Quiz"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:id="@+id/playgame"
-        style="@style/Widget.AppCompat.Button.Colored"
         android:elevation="12dp"
-        android:background="@color/buttonBackGround"
         android:layout_below="@+id/newGame_button"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="33dp" />
+        android:background="@drawable/red_button"
+        style="@style/button_text"
+    />
 
-    <Button
-        android:id="@+id/exit_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Exit"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:elevation="11dp"
-        android:layout_weight="1"
-        android:background="@color/buttonBackGround"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="117dp" />
 
     <Button
         android:text="Landmarks Quiz"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_weight="1"
         android:elevation="12dp"
-        android:background="@color/buttonBackGround"
         android:id="@+id/monuments"
         android:layout_below="@+id/playgame"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="65dp" />
+        android:background="@drawable/red_button"
+        style="@style/button_text"
+      />
+
+
+    <Button
+        android:id="@+id/exit_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Exit"
+        android:elevation="11dp"
+        android:layout_weight="1"
+        android:layout_below="@+id/monuments"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/red_button"
+        style="@style/button_text"
+        />
 
 
 </RelativeLayout>

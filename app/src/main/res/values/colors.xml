@@ -6,4 +6,5 @@
     <color name="mainBackGround">#ADD8E6</color>
     <color name="buttonBackGround">#646A6C</color>
     <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
 </resources>

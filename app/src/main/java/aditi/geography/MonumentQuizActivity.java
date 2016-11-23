@@ -23,36 +23,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import android.content.Context;
-import android.graphics.Color;
-import android.location.Address;
-import android.location.Geocoder;
-import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
-import android.support.v4.app.FragmentActivity;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -93,7 +63,7 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
 
     TextView questionText;
     TextView scoreText;
-    private static String questionString = "Locate ";
+    private static String questionString = "Where is the ";
 
     private class LatLong {
         Double lat;
@@ -137,11 +107,9 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
     }
 
     private void setQuestionText(String question) {
-        questionText.setText(questionString + question);
+        questionText.setText(questionString + question + "?");
         scoreText.setText(score + "/" + numQuestions);
-        Log.d("Selected Monument", selectedMonument);
         new processBitMap().execute();
-
         numQuestions++;
     }
 
@@ -151,20 +119,15 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
      */
     private class processBitMap extends AsyncTask<Void, Void, Bitmap> {
         protected Bitmap doInBackground(Void... params) {
-            BitmapDescriptor resized = null;
             Bitmap bitmap = null;
             String formattedSelection = selectedMonument.replaceAll(" ", "");
             String uri = "@drawable/" + formattedSelection.toLowerCase();
-
             int imageRes = getResources().getIdentifier(uri, null, getPackageName());
-
             if (imageRes != 0) {
                 bitmap = Utils.decodeSampledBitmapFromResource(getResources(), imageRes, 250, 150);
-
             }
             return bitmap;
         }
-
         protected void onPostExecute(Bitmap resized) {
             if (resized != null) {
                 setMonumentImage(resized);
@@ -209,8 +172,6 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
                 setIter = countryNamesForQuiz.iterator();
 
                 String next = setIter.next();
-                tts.speak(next, TextToSpeech.QUEUE_FLUSH, null);
-                Log.d("setting next",next);
                 selectedMonument = next;
                 setQuestionText(next);
             }
@@ -274,11 +235,6 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
         String tmp[] = question.split(questionString);
         String expectedCountryCode = countryNamesToCodes.get(tmp[1]);
 
-        Log.d("Expected code", expectedCountryCode);
-        Log.d("Expected name", tmp[1]);
-        Log.d("selected code", selectedCountryCode);
-
-
         if (selectedCountryCode.equals(expectedCountryCode)) {
             playMusic(this, R.raw.correct);
             if (!setIter.hasNext()) {
@@ -296,12 +252,13 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
             playMusic(this, R.raw.wrong);
             if (numClicksPerQuestion >= 5) {
                 //show the answer and go to next question
-                tts.speak("Sorry no more guesses for this question", TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak("Sorry no more guesses for this.", TextToSpeech.QUEUE_FLUSH, null);
                 LatLng latlongMarker = new LatLng(countryCodetoDetails.get(expectedCountryCode).lat,
                         countryCodetoDetails.get(expectedCountryCode).lon);
                 locationMarker.remove();
                 locationMarker = mMap.addMarker(new MarkerOptions().
-                        position(latlongMarker).title(selectedMonument  + " is in " + countryCodetoDetails.get(expectedCountryCode).name));
+                        position(latlongMarker).title(selectedMonument  + " is in "
+                        + countryCodetoDetails.get(expectedCountryCode).name));
                 locationMarker.showInfoWindow();
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latlongMarker));
                 if (!setIter.hasNext()) {
