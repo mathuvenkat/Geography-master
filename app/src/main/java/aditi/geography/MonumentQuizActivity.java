@@ -107,7 +107,7 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
     }
 
     private void setQuestionText(String question) {
-        questionText.setText(questionString + question + "?");
+        questionText.setText(questionString + question);
         scoreText.setText(score + "/" + numQuestions);
         new processBitMap().execute();
         numQuestions++;
@@ -119,15 +119,20 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
      */
     private class processBitMap extends AsyncTask<Void, Void, Bitmap> {
         protected Bitmap doInBackground(Void... params) {
+            BitmapDescriptor resized = null;
             Bitmap bitmap = null;
             String formattedSelection = selectedMonument.replaceAll(" ", "");
             String uri = "@drawable/" + formattedSelection.toLowerCase();
+
             int imageRes = getResources().getIdentifier(uri, null, getPackageName());
+
             if (imageRes != 0) {
                 bitmap = Utils.decodeSampledBitmapFromResource(getResources(), imageRes, 250, 150);
+
             }
             return bitmap;
         }
+
         protected void onPostExecute(Bitmap resized) {
             if (resized != null) {
                 setMonumentImage(resized);
@@ -252,13 +257,12 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
             playMusic(this, R.raw.wrong);
             if (numClicksPerQuestion >= 5) {
                 //show the answer and go to next question
-                tts.speak("Sorry no more guesses for this.", TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak("Sorry no more guesses for this question", TextToSpeech.QUEUE_FLUSH, null);
                 LatLng latlongMarker = new LatLng(countryCodetoDetails.get(expectedCountryCode).lat,
                         countryCodetoDetails.get(expectedCountryCode).lon);
                 locationMarker.remove();
                 locationMarker = mMap.addMarker(new MarkerOptions().
-                        position(latlongMarker).title(selectedMonument  + " is in "
-                        + countryCodetoDetails.get(expectedCountryCode).name));
+                        position(latlongMarker).title(selectedMonument  + " is in " + countryCodetoDetails.get(expectedCountryCode).name));
                 locationMarker.showInfoWindow();
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latlongMarker));
                 if (!setIter.hasNext()) {
