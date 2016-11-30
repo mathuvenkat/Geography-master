@@ -90,15 +90,15 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
         numClicksPerQuestion = 0;
         questionText = (TextView) findViewById(R.id.textView2);
         questionText.setVisibility(View.VISIBLE);
-        questionText.getLayoutParams().height = 200;
+        //questionText.getLayoutParams().height = 200;
         questionText.setTextColor(Color.BLACK);
-        questionText.setTextSize(questionText.getTextSize() + 15);
+        //questionText.setTextSize(questionText.getTextSize() + 15);
 
         scoreText = (TextView) findViewById(R.id.score);
         scoreText.setVisibility(View.VISIBLE);
-        scoreText.getLayoutParams().height = 75;
+        //scoreText.getLayoutParams().height = 75;
         scoreText.setTextColor(Color.BLACK);
-        scoreText.setTextSize(scoreText.getTextSize() + 5);
+        //scoreText.setTextSize(scoreText.getTextSize() + 5);
 
         imageView = (ImageView) findViewById(R.id.monument_img);
         imageView.setVisibility(View.VISIBLE);

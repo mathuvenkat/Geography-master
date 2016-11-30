@@ -32,13 +32,16 @@
 
         <activity
             android:name=".MapsActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_maps">
+            android:label="@string/title_activity_maps"
+            android:screenOrientation="landscape"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+        >
         </activity>
 
         <activity
             android:name=".GameActivity"
             android:configChanges="orientation|screenSize"
+            android:screenOrientation="landscape"
             android:label="@string/title_activity_maps">
         </activity>
 
@@ -46,6 +49,7 @@
         <activity
             android:name=".MonumentQuizActivity"
             android:configChanges="orientation|screenSize"
+            android:screenOrientation="landscape"
             android:label="Landmarks Quiz">
         </activity>
 
