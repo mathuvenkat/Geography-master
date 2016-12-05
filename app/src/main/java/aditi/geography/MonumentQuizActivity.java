@@ -7,10 +7,13 @@ package aditi.geography;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -18,6 +21,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -47,8 +54,7 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
     private Marker locationMarker = null;
     private static Set<String> countryNamesForQuiz;
     Iterator<String> setIter;
-    private static Map<String, LatLong> countryCodetoDetails = new HashMap<>();
-    private static Map<String, String> countryNamesToCodes = new HashMap<>();
+    private static Map<String, LatLong> monumentNameToDetailsMap = new HashMap<>();
     ImageView imageView = null;
 
     String selectedMonument;
@@ -64,23 +70,55 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
     TextView questionText;
     TextView scoreText;
     private static String questionString = "Where is the ";
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("MonumentQuiz Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
 
     private class LatLong {
         Double lat;
         Double lon;
-        String name;
+        String nameOfCountry;
+        String countryCode;
 
-        public LatLong(Double lat, Double lon, String name) {
+        public LatLong(Double lat, Double lon, String name, String countryCode) {
             this.lat = lat;
             this.lon = lon;
-            this.name = name;
+            this.nameOfCountry = name;
+            this.countryCode = countryCode;
         }
 
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -90,25 +128,28 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
         numClicksPerQuestion = 0;
         questionText = (TextView) findViewById(R.id.textView2);
         questionText.setVisibility(View.VISIBLE);
-        //questionText.getLayoutParams().height = 200;
         questionText.setTextColor(Color.BLACK);
-        //questionText.setTextSize(questionText.getTextSize() + 15);
 
         scoreText = (TextView) findViewById(R.id.score);
         scoreText.setVisibility(View.VISIBLE);
-        //scoreText.getLayoutParams().height = 75;
         scoreText.setTextColor(Color.BLACK);
-        //scoreText.setTextSize(scoreText.getTextSize() + 5);
 
         imageView = (ImageView) findViewById(R.id.monument_img);
         imageView.setVisibility(View.VISIBLE);
 
         init();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void setQuestionText(String question) {
         questionText.setText(questionString + question);
         scoreText.setText(score + "/" + numQuestions);
+
+        if (locationMarker != null) {
+            locationMarker.setVisible(false);
+        }
         new processBitMap().execute();
         numQuestions++;
     }
@@ -125,10 +166,8 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
             String uri = "@drawable/" + formattedSelection.toLowerCase();
 
             int imageRes = getResources().getIdentifier(uri, null, getPackageName());
-
             if (imageRes != 0) {
                 bitmap = Utils.decodeSampledBitmapFromResource(getResources(), imageRes, 250, 150);
-
             }
             return bitmap;
         }
@@ -138,21 +177,27 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
                 setMonumentImage(resized);
             }
         }
-
     }
 
     private void setMonumentImage(Bitmap resized) {
+        //recycle previous image
+        BitmapDrawable currentImg = (BitmapDrawable) imageView.getDrawable();
+        if (currentImg != null) {
+            Bitmap current = currentImg.getBitmap();
+            if(current != null){
+                current.recycle();
+            }
+        }
         imageView.setImageBitmap(resized);
     }
 
     private void init() {
-
         InputStream stream;
         tts = new TextToSpeech(MonumentQuizActivity.this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 if (status == TextToSpeech.ERROR) {
-                    //Log.e(TAG, "Failed to initialize text to speech");
+                    Log.e(TAG, "Failed to initialize text to speech");
                 }
             }
         });
@@ -167,13 +212,15 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
                 br = new BufferedReader(new InputStreamReader(stream));
                 while ((line = br.readLine()) != null) {
                     arr = line.split(",");
-                    countryCodetoDetails.put(arr[0], new LatLong(Double.parseDouble(arr[1]),
-                            Double.parseDouble(arr[2]),
-                            arr[3]));
-                    countryNamesToCodes.put(arr[4], arr[0]);
+                    try {
+                        monumentNameToDetailsMap.put(arr[4], new LatLong(Double.parseDouble(arr[1]),
+                                Double.parseDouble(arr[2]),
+                                arr[3], arr[0]));
+                    } catch (Exception e) {
+                        continue;
+                    }
                 }
-
-                countryNamesForQuiz = countryNamesToCodes.keySet();
+                countryNamesForQuiz = monumentNameToDetailsMap.keySet();
                 setIter = countryNamesForQuiz.iterator();
 
                 String next = setIter.next();
@@ -181,6 +228,7 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
                 setQuestionText(next);
             }
         } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
         } finally {
             try {
                 br.close();
@@ -211,7 +259,12 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
             tts.stop();
             tts.shutdown();
         }
-        super.onStop();
+        super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.disconnect();
     }
 
     /**
@@ -236,11 +289,13 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
      */
     private void ConvertTextToSpeech() {
         TextView questionText = (TextView) findViewById(R.id.textView2);
-        String question = (String) questionText.getText();
-        String tmp[] = question.split(questionString);
-        String expectedCountryCode = countryNamesToCodes.get(tmp[1]);
+        LatLong expectedDetails = monumentNameToDetailsMap.get(selectedMonument);
+        String expectedCountryCode = expectedDetails.countryCode;
 
         if (selectedCountryCode.equals(expectedCountryCode)) {
+            locationMarker.setTitle(selectedMonument + " is in " +
+                    expectedDetails.nameOfCountry);
+            locationMarker.showInfoWindow();
             playMusic(this, R.raw.correct);
             if (!setIter.hasNext()) {
                 setIter = countryNamesForQuiz.iterator();
@@ -249,28 +304,46 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
             if (score % 5 == 0) {
                 playMusic(this, R.raw.cheering);
             }
-            String text = setIter.next();
-            setQuestionText(text);
-            selectedMonument = text;
             numClicksPerQuestion = 0;
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    String text = setIter.next();
+                    setQuestionText(text);
+                    selectedMonument = text;
+                }
+            }, 1000);
+
         } else {
             playMusic(this, R.raw.wrong);
+            Log.d("NumChances", Integer.toString(numClicksPerQuestion));
             if (numClicksPerQuestion >= 5) {
                 //show the answer and go to next question
-                tts.speak("Sorry no more guesses for this question", TextToSpeech.QUEUE_FLUSH, null);
-                LatLng latlongMarker = new LatLng(countryCodetoDetails.get(expectedCountryCode).lat,
-                        countryCodetoDetails.get(expectedCountryCode).lon);
+                tts.speak("Sorry no more guesses for this question", TextToSpeech.QUEUE_FLUSH,
+                        null);
+                LatLng latlongMarker = new LatLng(expectedDetails.lat,
+                        expectedDetails.lon);
                 locationMarker.remove();
                 locationMarker = mMap.addMarker(new MarkerOptions().
-                        position(latlongMarker).title(selectedMonument  + " is in " + countryCodetoDetails.get(expectedCountryCode).name));
+                        position(latlongMarker).title(selectedMonument + " is in "
+                        + expectedDetails.nameOfCountry));
                 locationMarker.showInfoWindow();
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latlongMarker));
                 if (!setIter.hasNext()) {
                     setIter = countryNamesForQuiz.iterator();
                 }
-                String text = setIter.next();
-                setQuestionText(text);
-                selectedMonument = text;
+
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        String text = setIter.next();
+                        setQuestionText(text);
+                        selectedMonument = text;
+                    }
+                }, 3000);
                 numClicksPerQuestion = 0;
             } else {
                 numClicksPerQuestion++;
@@ -307,7 +380,7 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
                         locationMarker = mMap.addMarker(new MarkerOptions().
                                 position(latlongMarker).title(selectedCountry));
 
-
+                        locationMarker.setVisible(true);
                         locationMarker.showInfoWindow();
                         ConvertTextToSpeech();
                     }

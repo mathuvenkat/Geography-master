@@ -80,16 +80,12 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         numClicksPerQuestion = 0;
         questionText = (TextView) findViewById(R.id.textView2);
         questionText.setVisibility(View.VISIBLE);
-        questionText.getLayoutParams().height = 200;
         questionText.setTextColor(Color.BLACK);
-        questionText.setTextSize(questionText.getTextSize() + 15);
 
         scoreText = (TextView) findViewById(R.id.score);
         scoreText.setVisibility(View.VISIBLE);
-        scoreText.getLayoutParams().height = 75;
         scoreText.setTextColor(Color.BLACK);
-        scoreText.setTextSize(scoreText.getTextSize() + 5);
-
+     
         init();
     }
 
@@ -193,11 +189,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         String question = (String) questionText.getText();
         String tmp[] = question.split(questionString);
         String expectedCountryCode = countryNamesToCodes.get(tmp[1]);
-
-        Log.d("Expected code", expectedCountryCode);
-        Log.d("Expected name", tmp[1]);
-        Log.d("selected code", selectedCountryCode);
-
 
         if (selectedCountryCode.equals(expectedCountryCode)) {
             playMusic(this, R.raw.correct);
