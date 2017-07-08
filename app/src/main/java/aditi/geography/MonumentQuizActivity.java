@@ -241,6 +241,19 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
 
 
     @Override
+    protected void onResume(){
+        tts = new TextToSpeech(MonumentQuizActivity.this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.ERROR) {
+                    //Log.e(TAG, "Failed to initialize text to speech");
+                }
+            }
+        });
+        super.onResume();
+    }
+
+    @Override
     protected void onPause() {
         //Log.d(TAG, "Invoking onPause");
         Music.stop(this);

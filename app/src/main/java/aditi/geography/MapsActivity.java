@@ -79,6 +79,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
+    protected void onResume(){
+        tts = new TextToSpeech(MapsActivity.this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.ERROR) {
+                    //Log.e(TAG, "Failed to initialize text to speech");
+                }
+            }
+        });
+        super.onResume();
+    }
+
+    @Override
     protected void onStop() {
         if (tts != null) {
             tts.stop();
