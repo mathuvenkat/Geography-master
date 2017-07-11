@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -49,6 +50,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String selectedStateOrCountry;
     private String selectedCountry;
     private String selectedCountryCode;
+
+    private static Map<String, String> countryCodetoDetails = new HashMap<>();
+    String latLongCountryCode = "codeToName.csv";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +139,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         }
+
+
+
+        stream = getClass().getClassLoader().getResourceAsStream(latLongCountryCode);
+        try {
+            if (stream != null) {
+                br = new BufferedReader(new InputStreamReader(stream));
+                while ((line = br.readLine()) != null) {
+                    arr = line.split(",");
+                    countryCodetoDetails.put(arr[1].toLowerCase(),
+                            arr[0].toLowerCase());
+                }
+            }
+        } catch (Exception e) {
+        } finally {
+            try {
+                br.close();
+                stream.close();
+            } catch (Exception e) {
+
+            }
+        }
+
         new LongRunningGetIO().execute();
     }
 
@@ -176,10 +203,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private void ConvertTextToSpeech() {
         if (properties.get(selectedStateOrCountry) != null) {
+            Log.d("TTS " , properties.get(selectedStateOrCountry).toString());
             tts.speak(String.format("This is %s %s", selectedStateOrCountry, properties.get(selectedStateOrCountry)),
                     TextToSpeech.QUEUE_FLUSH, null);
 
-        } else if (countryCapitalMap.get(selectedStateOrCountry) != null) {
+        } else if (countryCapitalMap.get(selectedStateOrCountry.toLowerCase()) != null) {
+            Log.d("TTS " , "CAPITAL MAP " + countryCapitalMap.get(selectedStateOrCountry));
             tts.speak(countryCapitalMap.get(selectedStateOrCountry), TextToSpeech.QUEUE_FLUSH, null);
         } else {
             tts.speak(selectedStateOrCountry, TextToSpeech.QUEUE_FLUSH, null);
@@ -215,9 +244,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     List<Address> add = geo.getFromLocation(arg0.latitude, arg0.longitude, 1);
 
                     if (add.size() > 0) {
-                        selectedCountry = add.get(0).getCountryName();
-                        selectedStateOrCountry = selectedCountry;
+                        selectedCountry = add.get(0).getCountryName().toLowerCase();
                         selectedCountryCode = add.get(0).getCountryCode().toLowerCase();
+
+                        if(selectedCountry.isEmpty()){
+                            selectedCountry = countryCodetoDetails.get(selectedCountryCode.toLowerCase());
+                        }
+                        selectedStateOrCountry = selectedCountry.toLowerCase();
+
                         //For usa go with states . All other countries - it gives the capital
                         if (selectedCountry.equalsIgnoreCase("United States") ||
                                 selectedCountry.equalsIgnoreCase("US")) {
@@ -225,8 +259,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
 
                         locationMarker = mMap.addMarker(new MarkerOptions().
-                                position(latlongMarker).title(selectedCountry));
-
+                                position(latlongMarker).title(selectedCountry.toUpperCase()));
+//                        Log.d("Click", "Country name is ****" + selectedCountry);
+//                        Log.d("Click", "Country code is ****" + selectedCountryCode);
                         //resize image in Async task
                         new processBitMap().execute();
 

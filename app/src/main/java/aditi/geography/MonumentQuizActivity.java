@@ -70,6 +70,9 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
     TextView questionText;
     TextView scoreText;
     private static String questionString = "Where is the ";
+
+    String codeToName = "codeToName.csv";
+    private static Map<String, String> countryCodetoName = new HashMap<>();
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -237,6 +240,26 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
 
             }
         }
+
+        stream = getClass().getClassLoader().getResourceAsStream(codeToName);
+        try {
+            if (stream != null) {
+                br = new BufferedReader(new InputStreamReader(stream));
+                while ((line = br.readLine()) != null) {
+                    arr = line.split(",");
+                    countryCodetoName.put(arr[1].toLowerCase(),
+                            arr[0].toLowerCase());
+                }
+            }
+        } catch (Exception e) {
+        } finally {
+            try {
+                br.close();
+                stream.close();
+            } catch (Exception e) {
+
+            }
+        }
     }
 
 
@@ -390,8 +413,13 @@ public class MonumentQuizActivity extends FragmentActivity implements OnMapReady
                     if (add.size() > 0) {
                         selectedCountry = add.get(0).getCountryName();
                         selectedCountryCode = add.get(0).getCountryCode();
+
+                        if(selectedCountry.isEmpty()){
+                            selectedCountry = countryCodetoName.get(selectedCountryCode.toLowerCase());
+                        }
+
                         locationMarker = mMap.addMarker(new MarkerOptions().
-                                position(latlongMarker).title(selectedCountry));
+                                position(latlongMarker).title(selectedCountry.toUpperCase()));
 
                         locationMarker.setVisible(true);
                         locationMarker.showInfoWindow();

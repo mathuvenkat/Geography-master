@@ -55,6 +55,9 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     TextView scoreText;
     private static String questionString = "Locate ";
 
+    String codeToName = "codeToName.csv";
+    private static Map<String, String> countryCodetoName = new HashMap<>();
+
     private class LatLong {
         Double lat;
         Double lon;
@@ -139,6 +142,27 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         }
+
+        stream = getClass().getClassLoader().getResourceAsStream(codeToName);
+        try {
+            if (stream != null) {
+                br = new BufferedReader(new InputStreamReader(stream));
+                while ((line = br.readLine()) != null) {
+                    arr = line.split(",");
+                    countryCodetoName.put(arr[1].toLowerCase(),
+                            arr[0].toLowerCase());
+                }
+            }
+        } catch (Exception e) {
+        } finally {
+            try {
+                br.close();
+                stream.close();
+            } catch (Exception e) {
+
+            }
+        }
+
     }
 
     @Override
@@ -262,8 +286,13 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                     if (add.size() > 0) {
                         selectedCountry = add.get(0).getCountryName();
                         selectedCountryCode = add.get(0).getCountryCode();
+
+                        if(selectedCountry.isEmpty()){
+                            selectedCountry = countryCodetoName.get(selectedCountryCode.toLowerCase());
+                        }
+
                         locationMarker = mMap.addMarker(new MarkerOptions().
-                                position(latlongMarker).title(selectedCountry));
+                                position(latlongMarker).title(selectedCountry.toUpperCase()));
 
 
                         locationMarker.showInfoWindow();

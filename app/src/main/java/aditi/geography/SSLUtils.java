@@ -103,7 +103,7 @@ public class SSLUtils {
                         "The capital of %s is %s ",
                         countryName, jsonobject.getString("capital"));
             }
-            countryCapitalMap.put(countryName, val);
+            countryCapitalMap.put(countryName.toLowerCase(), val);
         }
     }
 }
